@@ -30,6 +30,10 @@ parser.add_argument('--decom', type=int, dest='decom', default=0, help='decom fl
 
 args = parser.parse_args()
 
+# LOL Dataset
+Img_high = 'F:\LowLightDataset\LOLdataset\our485\high\*.png'
+Img_low = 'F:\LowLightDataset\LOLdataset\our485\low\*.png'
+
 def lowlight_train(lowlight_enhance):
     if not os.path.exists(args.ckpt_dir):
         os.makedirs(args.ckpt_dir)
@@ -42,9 +46,11 @@ def lowlight_train(lowlight_enhance):
     train_low_data = []
     train_high_data = []
 
-    train_low_data_names = glob('./data/our485/low/*.png') + glob('./data/syn/low/*.png')
+    # train_low_data_names = glob('./data/our485/low/*.png') + glob('./data/syn/low/*.png')
+    train_low_data_names = glob(Img_low)
     train_low_data_names.sort()
-    train_high_data_names = glob('./data/our485/high/*.png') + glob('./data/syn/high/*.png')
+    # train_high_data_names = glob('./data/our485/high/*.png') + glob('./data/syn/high/*.png')
+    train_high_data_names = glob(Img_high)
     train_high_data_names.sort()
     assert len(train_low_data_names) == len(train_high_data_names)
     print('[*] Number of training data: %d' % len(train_low_data_names))
@@ -58,7 +64,8 @@ def lowlight_train(lowlight_enhance):
     eval_low_data = []
     eval_high_data = []
 
-    eval_low_data_name = glob('./data/eval/low/*.*')
+    # eval_low_data_name = glob('./data/eval/low/*.*')
+    eval_low_data_name = glob(Img_low)
 
     for idx in range(len(eval_low_data_name)):
         eval_low_im = load_images(eval_low_data_name[idx])

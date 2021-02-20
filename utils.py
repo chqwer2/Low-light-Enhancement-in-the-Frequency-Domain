@@ -1,19 +1,26 @@
 import numpy as np
 from PIL import Image
+import tensorflow as tf
+
 
 def fft(illumination):
-    fft_y = np.fft.fft2(illumination)  # a+bj
-    fft_y = np.fft.fftshift(fft_y)  # cmap='gray'
-    mag = np.log(np.abs(fft_y))
-    ang = np.angle(fft_y)
+    illumination = tf.cast(illumination, tf.complex64)
+    fft_y = tf.signal.fft2d(illumination)  # a+bj
+    fft_y = tf.signal.fftshift(fft_y)  # cmap='gray'
+    mag = tf.math.log(tf.math.abs(fft_y))
+    ang = tf.math.angle(fft_y)
     return mag, ang
 
 def ifft(mag, ang):
     # xf1.*cos(yf2)+xf1.*sin(yf2).*i
-    mag = np.exp(mag)
-
-    ifft = mag * (np.cos(ang) + np.sin(ang) * complex(0, 1))
-    ifft = np.fft.ifft2(ifft)
+    mag = tf.math.exp(mag)
+    i = tf.complex(0.0, 1.0)
+    b = tf.cast(tf.math.sin(ang), tf.complex64) * i
+    a = (tf.cast(tf.math.cos(ang), tf.complex64) + b)
+    ifft = tf.cast(mag, tf.complex64) * a
+    ifft = tf.signal.ifftshift(ifft)
+    ifft = tf.signal.ifft2d(ifft)
+    ifft = tf.cast(tf.math.abs(ifft), tf.float32)
     return ifft
 
 def data_augmentation(image, mode):
