@@ -17,7 +17,7 @@ parser.add_argument('--gpu_mem', dest='gpu_mem', type=float, default=0.5, help="
 parser.add_argument('--phase', dest='phase', default='train', help='train or test')
 
 parser.add_argument('--epoch', dest='epoch', type=int, default=100, help='number of total epoches')
-parser.add_argument('--batch_size', dest='batch_size', type=int, default=16, help='number of samples in one batch')
+parser.add_argument('--batch_size', dest='batch_size', type=int, default=16, help='number of samples in one batch')# 16
 parser.add_argument('--patch_size', dest='patch_size', type=int, default=48, help='patch size')
 parser.add_argument('--start_lr', dest='start_lr', type=float, default=0.001, help='initial learning rate for adam')
 parser.add_argument('--eval_every_epoch', dest='eval_every_epoch', default=20, help='evaluating and saving checkpoints every #  epoch')
@@ -40,6 +40,7 @@ def lowlight_train(lowlight_enhance):
     if not os.path.exists(args.sample_dir):
         os.makedirs(args.sample_dir)
 
+    # lr schedule
     lr = args.start_lr * np.ones([args.epoch])
     lr[20:] = lr[0] / 10.0
 
@@ -47,10 +48,10 @@ def lowlight_train(lowlight_enhance):
     train_high_data = []
 
     # train_low_data_names = glob('./data/our485/low/*.png') + glob('./data/syn/low/*.png')
-    train_low_data_names = glob(Img_low)
+    train_low_data_names = glob(Img_low)[:100]
     train_low_data_names.sort()
     # train_high_data_names = glob('./data/our485/high/*.png') + glob('./data/syn/high/*.png')
-    train_high_data_names = glob(Img_high)
+    train_high_data_names = glob(Img_high)[:100]
     train_high_data_names.sort()
     assert len(train_low_data_names) == len(train_high_data_names)
     print('[*] Number of training data: %d' % len(train_low_data_names))
@@ -65,7 +66,7 @@ def lowlight_train(lowlight_enhance):
     eval_high_data = []
 
     # eval_low_data_name = glob('./data/eval/low/*.*')
-    eval_low_data_name = glob(Img_low)
+    eval_low_data_name = glob(Img_low)[:100]
 
     for idx in range(len(eval_low_data_name)):
         eval_low_im = load_images(eval_low_data_name[idx])
@@ -74,7 +75,10 @@ def lowlight_train(lowlight_enhance):
     lowlight_enhance.train(train_low_data, train_high_data, eval_low_data, batch_size=args.batch_size, patch_size=args.patch_size, epoch=args.epoch, lr=lr, sample_dir=args.sample_dir, ckpt_dir=os.path.join(args.ckpt_dir, 'Decom'), eval_every_epoch=args.eval_every_epoch, train_phase="Decom")
 
     lowlight_enhance.train(train_low_data, train_high_data, eval_low_data, batch_size=args.batch_size, patch_size=args.patch_size, epoch=args.epoch, lr=lr, sample_dir=args.sample_dir, ckpt_dir=os.path.join(args.ckpt_dir, 'Relight'), eval_every_epoch=args.eval_every_epoch, train_phase="Relight")
-
+    #test
+    if not os.path.exists(args.save_dir):
+        os.makedirs(args.save_dir)
+    lowlight_enhance.test(train_low_data[:10], train_high_data[:10], eval_low_data[:10], save_dir=args.save_dir, decom_flag=args.decom)
 
 def lowlight_test(lowlight_enhance):
     if args.test_dir == None:

@@ -1,6 +1,7 @@
 import numpy as np
 from PIL import Image
 import tensorflow as tf
+import matplotlib.pyplot as plt
 
 
 def fft(illumination):
@@ -15,12 +16,10 @@ def ifft(mag, ang):
     # xf1.*cos(yf2)+xf1.*sin(yf2).*i
     mag = tf.math.exp(mag)
     i = tf.complex(0.0, 1.0)
-    b = tf.cast(tf.math.sin(ang), tf.complex64) * i
-    a = (tf.cast(tf.math.cos(ang), tf.complex64) + b)
-    ifft = tf.cast(mag, tf.complex64) * a
+    ifft = tf.cast(mag, tf.complex64) * (tf.cast(tf.math.cos(ang), tf.complex64) + tf.cast(tf.math.sin(ang), tf.complex64) * i)
     ifft = tf.signal.ifftshift(ifft)
     ifft = tf.signal.ifft2d(ifft)
-    ifft = tf.cast(tf.math.abs(ifft), tf.float32)
+    ifft = tf.cast(ifft, tf.float32)  #tf.math.abs(
     return ifft
 
 def data_augmentation(image, mode):
@@ -68,3 +67,25 @@ def save_images(filepath, result_1, result_2 = None):
     im = Image.fromarray(np.clip(cat_image * 255.0, 0, 255.0).astype('uint8'))
     im.save(filepath, 'png')
 
+
+if __name__ == '__main__':
+    img_value = tf.compat.v1.read_file('22.png')
+
+
+    img = tf.image.decode_jpeg(img_value, channels=3)
+    print(img.shape)   #(400, 600, 3)
+    input_max = tf.reduce_max(img, axis=2, keepdims=True)
+
+    mag, ang = fft(input_max)
+    ifft_mag = ifft(mag, ang)
+
+    ax1 = plt.subplot(2, 2, 1)
+    plt.imshow(img.numpy())
+    ax2 = plt.subplot(2, 2, 2)
+    plt.imshow(input_max.numpy())
+    ax3 = plt.subplot(2, 2, 3)
+    plt.imshow(mag.numpy())
+    ax4 = plt.subplot(2, 2, 4)
+    plt.imshow(ifft_mag.numpy())
+
+    plt.show()

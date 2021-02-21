@@ -123,6 +123,7 @@ class lowlight_enhance(object):
 
         self.lr = tf.compat.v1.placeholder(tf.float32, name='learning_rate')
         optimizer = tf.compat.v1.train.AdamOptimizer(self.lr, name='AdamOptimizer')
+        # tf.keras.optimizers.Adam(self.lr, name='Adam', decay=1e-4)
 
         self.var_Decom = [var for var in tf.compat.v1.trainable_variables() if 'DecomNet' in var.name]
         self.var_Relight = [var for var in tf.compat.v1.trainable_variables() if 'RelightNet' in var.name]
