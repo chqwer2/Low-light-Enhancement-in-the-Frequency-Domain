@@ -7,6 +7,8 @@ import random
 from PIL import Image
 import tensorflow as tf
 import numpy as np
+from tensorflow.keras import layers, Model, Input
+
 
 from utils import *
 
@@ -17,10 +19,10 @@ def DecomNet(input_im, layer_num, channel=64, kernel_size=3):
     input_max = tf.reduce_max(input_im, axis=3, keepdims=True)   #maximum
     input_im = concat([input_max, input_im])         #TODO, max to the end
     with tf.compat.v1.variable_scope('DecomNet', reuse=tf.compat.v1.AUTO_REUSE):
-        conv = tf.compat.v1.layers.conv2d(input_im, channel, kernel_size * 3, padding='same', activation=None, name="shallow_feature_extraction")
+        conv = layers.Conv2D(input_im, channel, kernel_size * 3, padding='same', activation=None, name="shallow_feature_extraction")
         for idx in range(layer_num):
-            conv = tf.compat.v1.layers.conv2d(conv, channel, kernel_size, padding='same', activation=tf.nn.relu, name='activated_layer_%d' % idx)
-        conv = tf.compat.v1.layers.conv2d(conv, 4, kernel_size, padding='same', activation=None, name='recon_layer')
+            conv = layers.Conv2D(conv, channel, kernel_size, padding='same', activation=tf.nn.relu, name='activated_layer_%d' % idx)
+        conv = layers.Conv2D(conv, 4, kernel_size, padding='same', activation=None, name='recon_layer')
         # filter = 4
     R = tf.sigmoid(conv[:,:,:,0:3])   #
     L = tf.sigmoid(conv[:,:,:,3:4])
@@ -30,56 +32,83 @@ def DecomNet(input_im, layer_num, channel=64, kernel_size=3):
 def RelightNet(input_L, input_R, channel=64, kernel_size=3):
     input_im = concat([input_R, input_L])
     with tf.compat.v1.variable_scope('RelightNet'):
-        conv0 = tf.compat.v1.layers.conv2d(input_im, channel, kernel_size, padding='same', activation=None)
-        conv1 = tf.compat.v1.layers.conv2d(conv0, channel, kernel_size, strides=2, padding='same', activation=tf.nn.relu)
-        conv2 = tf.compat.v1.layers.conv2d(conv1, channel, kernel_size, strides=2, padding='same', activation=tf.nn.relu)
-        conv3 = tf.compat.v1.layers.conv2d(conv2, channel, kernel_size, strides=2, padding='same', activation=tf.nn.relu)
+        conv0 = layers.Conv2D(input_im, channel, kernel_size, padding='same', activation=None)
+        conv1 = layers.Conv2D(conv0, channel, kernel_size, strides=2, padding='same', activation=tf.nn.relu)
+        conv2 = layers.Conv2D(conv1, channel, kernel_size, strides=2, padding='same', activation=tf.nn.relu)
+        conv3 = layers.Conv2D(conv2, channel, kernel_size, strides=2, padding='same', activation=tf.nn.relu)
         
         up1 = tf.compat.v1.image.resize_nearest_neighbor(conv3, (tf.shape(conv2)[1], tf.shape(conv2)[2]))
-        deconv1 = tf.compat.v1.layers.conv2d(up1, channel, kernel_size, padding='same', activation=tf.nn.relu) + conv2
+        deconv1 = layers.Conv2D(up1, channel, kernel_size, padding='same', activation=tf.nn.relu) + conv2
         up2 = tf.compat.v1.image.resize_nearest_neighbor(deconv1, (tf.shape(conv1)[1], tf.shape(conv1)[2]))
-        deconv2= tf.compat.v1.layers.conv2d(up2, channel, kernel_size, padding='same', activation=tf.nn.relu) + conv1
+        deconv2= layers.Conv2D(up2, channel, kernel_size, padding='same', activation=tf.nn.relu) + conv1
         up3 = tf.compat.v1.image.resize_nearest_neighbor(deconv2, (tf.shape(conv0)[1], tf.shape(conv0)[2]))
-        deconv3 = tf.compat.v1.layers.conv2d(up3, channel, kernel_size, padding='same', activation=tf.nn.relu) + conv0
+        deconv3 = layers.Conv2D(up3, channel, kernel_size, padding='same', activation=tf.nn.relu) + conv0
         
         deconv1_resize = tf.compat.v1.image.resize_nearest_neighbor(deconv1, (tf.shape(deconv3)[1], tf.shape(deconv3)[2]))
         deconv2_resize = tf.compat.v1.image.resize_nearest_neighbor(deconv2, (tf.shape(deconv3)[1], tf.shape(deconv3)[2]))
         feature_gather = concat([deconv1_resize, deconv2_resize, deconv3])
-        feature_fusion = tf.compat.v1.layers.conv2d(feature_gather, channel, 1, padding='same', activation=None)
-        output = tf.compat.v1.layers.conv2d(feature_fusion, 1, 3, padding='same', activation=None)
+        feature_fusion = layers.Conv2D(feature_gather, channel, 1, padding='same', activation=None)
+        output = layers.Conv2D(feature_fusion, 1, 3, padding='same', activation=None)
     return output
 
 
 def my_RelightNet(input_mag, channel=64, kernel_size=3):  # u-net
 
     with tf.compat.v1.variable_scope('RelightNet'):
-        conv0 = tf.compat.v1.layers.conv2d(input_mag, channel, kernel_size, padding='same', activation=tf.nn.relu)
-        conv1 = tf.compat.v1.layers.conv2d(conv0, channel, kernel_size, strides=2, padding='same',
+        conv0 = layers.Conv2D(input_mag, channel, kernel_size, padding='same', activation=tf.nn.relu)
+        conv1 = layers.Conv2D(conv0, channel, kernel_size, strides=2, padding='same',
                                            activation=tf.nn.relu)
-        conv2 = tf.compat.v1.layers.conv2d(conv1, channel, kernel_size, strides=2, padding='same',
+        conv2 = layers.Conv2D(conv1, channel, kernel_size, strides=2, padding='same',
                                            activation=tf.nn.relu)
-        conv3 = tf.compat.v1.layers.conv2d(conv2, channel, kernel_size, strides=2, padding='same',
+        conv3 = layers.Conv2D(conv2, channel, kernel_size, strides=2, padding='same',
                                            activation=tf.nn.relu)
 
         up1 = tf.compat.v1.image.resize_nearest_neighbor(conv3, (tf.shape(conv2)[1], tf.shape(conv2)[2]))
-        deconv1 = tf.compat.v1.layers.conv2d(up1, channel, kernel_size, padding='same', activation=tf.nn.relu) + conv2
+        deconv1 = layers.Conv2D(up1, channel, kernel_size, padding='same', activation=tf.nn.relu) + conv2
         up2 = tf.compat.v1.image.resize_nearest_neighbor(deconv1, (tf.shape(conv1)[1], tf.shape(conv1)[2]))
-        deconv2 = tf.compat.v1.layers.conv2d(up2, channel, kernel_size, padding='same', activation=tf.nn.relu) + conv1
+        deconv2 = layers.Conv2D(up2, channel, kernel_size, padding='same', activation=tf.nn.relu) + conv1
         up3 = tf.compat.v1.image.resize_nearest_neighbor(deconv2, (tf.shape(conv0)[1], tf.shape(conv0)[2]))
-        deconv3 = tf.compat.v1.layers.conv2d(up3, channel, kernel_size, padding='same', activation=tf.nn.relu) + conv0
+        deconv3 = layers.Conv2D(up3, channel, kernel_size, padding='same', activation=tf.nn.relu) + conv0
 
         deconv1_resize = tf.compat.v1.image.resize_nearest_neighbor(deconv1,
                                                                     (tf.shape(deconv3)[1], tf.shape(deconv3)[2]))
         deconv2_resize = tf.compat.v1.image.resize_nearest_neighbor(deconv2,
                                                                     (tf.shape(deconv3)[1], tf.shape(deconv3)[2]))
         feature_gather = concat([deconv1_resize, deconv2_resize, deconv3])
-        feature_fusion = tf.compat.v1.layers.conv2d(feature_gather, channel, 1, padding='same', activation=None)
-        output_mag = tf.compat.v1.layers.conv2d(feature_fusion, 1, 3, padding='same', activation=None)
+        feature_fusion = layers.Conv2D(feature_gather, channel, 1, padding='same', activation=None)
+        output_mag = layers.Conv2D(feature_fusion, 1, 3, padding='same', activation=None)
 
 
     return output_mag
 
+def keras_RelightNet(channel=64, kernel_size=3):  # u-net
+    input = Input(shape=[None, None, 1])
+    
+    conv0 = layers.Conv2D(channel, kernel_size, padding='same', activation=tf.nn.relu)(input)
+    conv1 = layers.Conv2D(channel, kernel_size, strides=2, padding='same',
+                                       activation=tf.nn.relu)(conv0, )
+    conv2 = layers.Conv2D(channel, kernel_size, strides=2, padding='same',
+                                       activation=tf.nn.relu)(conv1, )
+    conv3 = layers.Conv2D(channel, kernel_size, strides=2, padding='same',
+                                       activation=tf.nn.relu)(conv2, )
 
+    up1 = tf.compat.v1.image.resize_nearest_neighbor(conv3, (tf.shape(conv2)[1], tf.shape(conv2)[2]))
+    deconv1 = layers.Conv2D(channel, kernel_size, padding='same', activation=tf.nn.relu)(up1, ) + conv2
+    up2 = tf.compat.v1.image.resize_nearest_neighbor(deconv1, (tf.shape(conv1)[1], tf.shape(conv1)[2]))
+    deconv2 = layers.Conv2D(channel, kernel_size, padding='same', activation=tf.nn.relu)(up2, ) + conv1
+    up3 = tf.compat.v1.image.resize_nearest_neighbor(deconv2, (tf.shape(conv0)[1], tf.shape(conv0)[2]))
+    deconv3 = layers.Conv2D(channel, kernel_size, padding='same', activation=tf.nn.relu)(up3, ) + conv0
+
+    deconv1_resize = tf.compat.v1.image.resize_nearest_neighbor(deconv1,
+                                                                (tf.shape(deconv3)[1], tf.shape(deconv3)[2]))
+    deconv2_resize = tf.compat.v1.image.resize_nearest_neighbor(deconv2,
+                                                                (tf.shape(deconv3)[1], tf.shape(deconv3)[2]))
+    feature_gather = concat([deconv1_resize, deconv2_resize, deconv3])
+    feature_fusion = layers.Conv2D(channel, 1, padding='same', activation=None)(feature_gather, )
+    output_mag = layers.Conv2D(1, 1, padding='same', activation=None)(feature_fusion, )
+
+    model = Model(input, output_mag)
+    return model
 
 class lowlight_enhance(object):
     def __init__(self, sess):
@@ -93,9 +122,9 @@ class lowlight_enhance(object):
         [R_low, I_low] = DecomNet(self.input_low, layer_num=self.DecomNet_layer_num)
         [R_high, I_high] = DecomNet(self.input_high, layer_num=self.DecomNet_layer_num)
 
-        input_mag, input_ang = fft(I_low)
+        input_mag, input_ang = fft_tf(I_low)
         I_delta_mag = my_RelightNet(input_mag)  #, R_low
-        I_delta_mag = ifft(I_delta_mag, input_ang)
+        I_delta_mag = ifft_tf(I_delta_mag, input_ang)
 
         I_low_3 = concat([I_low, I_low, I_low])
         I_high_3 = concat([I_high, I_high, I_high])
@@ -146,10 +175,10 @@ class lowlight_enhance(object):
             kernel = self.smooth_kernel_x
         elif direction == "y":
             kernel = self.smooth_kernel_y
-        return tf.abs(tf.nn.conv2d(input_tensor, kernel, strides=[1, 1, 1, 1], padding='SAME'))
+        return tf.abs(tf.nn.Conv2D(input_tensor, kernel, strides=[1, 1, 1, 1], padding='SAME'))
 
     def ave_gradient(self, input_tensor, direction):
-        return tf.compat.v1.layers.average_pooling2d(self.gradient(input_tensor, direction), pool_size=3, strides=1, padding='SAME')
+        return layers.average_pooling2d(self.gradient(input_tensor, direction), pool_size=3, strides=1, padding='SAME')
 
     def smooth(self, input_I, input_R):
         input_R = tf.image.rgb_to_grayscale(input_R)
@@ -285,4 +314,27 @@ class lowlight_enhance(object):
                 save_images(os.path.join(save_dir, name + "_I_low." + suffix), I_low)
                 save_images(os.path.join(save_dir, name + "_I_delta." + suffix), I_delta)
             save_images(os.path.join(save_dir, name + "_S."   + suffix), S)
+
+if __name__ == '__main__':
+    import matplotlib.pyplot as plt
+    model = keras_RelightNet()
+    pic_h = load_images('22.png')[np.newaxis, :, :, :, np.newaxis]
+    pic_l = load_images('22_low.png')[np.newaxis, :, :, :, np.newaxis]
+    mag_h, ang_h = fft_np(np.max(pic_h, axis=3))
+    mag_l, ang_l = fft_np(np.max(pic_l, axis=3))
+    print(mag_h.shape)
+
+    model.compile(optimizer='adam',loss='mse')
+    model.fit(x=mag_l, y=mag_h, epochs=100)
+    mag = model.predict(mag_l)
+    pic_recover = ifft_np(mag, ang_l)
+    ax1 = plt.subplot(2, 1, 1)
+
+    print(mag[0].shape, mag_h[0].shape)
+    plt.imshow(np.concatenate([mag[0], mag_h[0]],1))
+    ax2 = plt.subplot(2, 1, 2)
+    print(pic_recover[0].shape, np.max(pic_h, axis=3)[0].shape)
+    print(pic_recover)
+    plt.imshow(np.concatenate([pic_recover[0], np.max(pic_h, axis=3)[0]], 1))
+    plt.show()
 

@@ -34,6 +34,9 @@ args = parser.parse_args()
 Img_high = 'F:\LowLightDataset\LOLdataset\our485\high\*.png'
 Img_low = 'F:\LowLightDataset\LOLdataset\our485\low\*.png'
 
+# Img_high = '/content/drive/MyDrive/Data/LOL/LOLdataset/our485/high/*.png'
+# Img_low = '/content/drive/MyDrive/Data/LOL/LOLdataset/our485/low/*.png'
+
 def lowlight_train(lowlight_enhance):
     if not os.path.exists(args.ckpt_dir):
         os.makedirs(args.ckpt_dir)

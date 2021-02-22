@@ -1,25 +1,39 @@
 import numpy as np
 from PIL import Image
-import tensorflow as tf
 import matplotlib.pyplot as plt
+import os
+from datetime import datetime
+from functools import wraps
 
 
-def fft(illumination):
-    illumination = tf.cast(illumination, tf.complex64)
-    fft_y = tf.signal.fft2d(illumination)  # a+bj
-    fft_y = tf.signal.fftshift(fft_y)  # cmap='gray'
-    mag = tf.math.log(tf.math.abs(fft_y))
-    ang = tf.math.angle(fft_y)
+def time_log(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        begin = datetime.now()
+        fun = func(*args, **kwargs)
+        end = datetime.now()
+        print("===time cost: {} costs:{}".format(func.__name__, end - begin))
+        return fun
+    return wrapper
+
+def img_normalization(array):
+    array = (array - np.min(array)) / (np.max(array) - np.min(array))
+    return array
+
+def fft_np(illumination):
+    fft_y = np.fft.fft2(illumination)  # a+bj
+    fft_y = np.fft.fftshift(fft_y)  # cmap='gray'
+    mag = np.log(np.abs(fft_y)+1)
+    ang = np.angle(fft_y)
     return mag, ang
 
-def ifft(mag, ang):
+
+def ifft_np(mag, ang):
     # xf1.*cos(yf2)+xf1.*sin(yf2).*i
-    mag = tf.math.exp(mag)
-    i = tf.complex(0.0, 1.0)
-    ifft = tf.cast(mag, tf.complex64) * (tf.cast(tf.math.cos(ang), tf.complex64) + tf.cast(tf.math.sin(ang), tf.complex64) * i)
-    ifft = tf.signal.ifftshift(ifft)
-    ifft = tf.signal.ifft2d(ifft)
-    ifft = tf.cast(ifft, tf.float32)  #tf.math.abs(
+    i = complex(0.0, 1.0)
+    ifft = (np.exp(mag)-1) * (np.cos(ang) + np.sin(ang) * i)
+    ifft = np.fft.ifftshift(ifft)
+    ifft = np.abs(np.fft.ifft2(ifft))
     return ifft
 
 def data_augmentation(image, mode):
@@ -51,6 +65,12 @@ def data_augmentation(image, mode):
         image = np.rot90(image, k=3)
         return np.flipud(image)
 
+
+
+def mkdir(dir):
+    if not os.path.exists(dir):
+            os.makedirs(dir)
+
 def load_images(file):
     im = Image.open(file)
     return np.array(im, dtype="float32") / 255.0
@@ -68,24 +88,4 @@ def save_images(filepath, result_1, result_2 = None):
     im.save(filepath, 'png')
 
 
-if __name__ == '__main__':
-    img_value = tf.compat.v1.read_file('22.png')
 
-
-    img = tf.image.decode_jpeg(img_value, channels=3)
-    print(img.shape)   #(400, 600, 3)
-    input_max = tf.reduce_max(img, axis=2, keepdims=True)
-
-    mag, ang = fft(input_max)
-    ifft_mag = ifft(mag, ang)
-
-    ax1 = plt.subplot(2, 2, 1)
-    plt.imshow(img.numpy())
-    ax2 = plt.subplot(2, 2, 2)
-    plt.imshow(input_max.numpy())
-    ax3 = plt.subplot(2, 2, 3)
-    plt.imshow(mag.numpy())
-    ax4 = plt.subplot(2, 2, 4)
-    plt.imshow(ifft_mag.numpy())
-
-    plt.show()
