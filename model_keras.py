@@ -1,11 +1,33 @@
 import matplotlib.pyplot as plt
 from utils import mkdir, load_images, fft_np, ifft_np
 import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras.callbacks import LearningRateScheduler
+from tensorflow.python.keras.optimizer_v2 import learning_rate_schedule
 from tensorflow.keras import Input, Model, layers
 import numpy as np
 
 def concat(layers):
     return tf.concat(layers, axis=3)
+
+
+def exponential_decay_with_warmup(global_step, ):
+    warmup_step = 10
+    learning_rate_base = 0.1
+    learning_rate_step = 1
+    learning_rate_decay = 0.8  # 0.96 for 200, 0.8 for 50
+    staircase = False
+    with tf.name_scope("exponential_decay_with_warmup"):
+        decayed_lr = learning_rate_schedule.ExponentialDecay(learning_rate_base, learning_rate_step,
+                                                             learning_rate_decay, staircase=staircase)
+        linear_increase = learning_rate_base * tf.cast(global_step / warmup_step, tf.float32)
+
+        exponential_decay = decayed_lr(global_step-10)
+        learning_rate = tf.cond(global_step <= warmup_step,
+                                lambda: linear_increase.numpy(),
+                                lambda: exponential_decay.numpy())
+        return learning_rate
+
 
 def keras_RelightNet(channel=64, kernel_size=3):  # u-net
     input = Input(shape=[None, None, 1])
@@ -41,23 +63,26 @@ def keras_RelightNet(channel=64, kernel_size=3):  # u-net
 if __name__ == '__main__':
     model = keras_RelightNet()
 
-    mag_h = np.load('E:/LOLdataset/our485/high_mag.npy')
-    mag_l = np.load('E:/LOLdataset/our485/low_mag.npy')
-    ang_l = np.load('E:/LOLdataset/our485/low_ang.npy')
-    pic = np.load('E:/LOLdataset/our485/high.npy')
+    mag_h = np.load('/content/drive/MyDrive/LOL/LOLDataset/our485/high_mag.npz')['arr_0']
+    mag_l = np.load('/content/drive/MyDrive/LOL/LOLDataset/our485/low_mag.npz')['arr_0']
+    ang_l = np.load('/content/drive/MyDrive/LOL/LOLDataset/our485/low_ang.npz')['arr_0']
+    pic = np.max(np.load('/content/drive/MyDrive/LOL/LOLDataset/our485/high.npz')['arr_0'], axis=3)
+    # min, max-min
+    scaler = np.load('/content/drive/MyDrive/LOL/LOLDataset/our485/low_scaler.npy')['arr_0']
 
     model.compile(optimizer='adam', loss='mse')
-    model.fit(x=mag_l, y=mag_h, epochs=10, batch_size=8)
+    reduceLR = [LearningRateScheduler(exponential_decay_with_warmup)]
+    model.fit(x=mag_l, y=mag_h, epochs=100, batch_size=16, validation_split=0.02,
+                   callbacks=reduceLR, shuffle=True, workers=4, use_multiprocessing=True)
+
 
     mag = model.predict(mag_l)
-    pic_recover = ifft_np(mag, ang_l)
-    ax1 = plt.subplot(2, 1, 1)
+    pic_recover = ifft_np(mag[:10] * scaler[1] + scaler[0], ang_l[:10] * scaler[3] + scaler[2])
 
-    print(mag[0].shape, mag_h[0].shape)
-    plt.imshow(np.concatenate([mag[0], mag_h[0]], 1))
-    ax2 = plt.subplot(2, 1, 2)
     while True:
         i = int(input())
-        print(pic_recover[i].shape, np.max(pic, axis=3)[i].shape)
-        plt.imshow(np.concatenate([pic_recover[i], np.max(pic, axis=3)[i]], 1))
-        plt.show()
+        print(pic_recover[i].shape, pic[i].shape)
+        out = np.concatenate([pic_recover[i], pic[i]], 1)
+        plt.imshow(out)
+        plt.imsave('/content/drive/MyDrive/How_to_see_in_the_Dark/img_{}.jpg'.format(i), out)
+
