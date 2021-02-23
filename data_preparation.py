@@ -38,7 +38,7 @@ def compress_img_fft(input_img_repository, output_img_repository, output_name):
 
     np.savez_compressed(output_img_repository + output_name + '_mag', mag)
     np.savez_compressed(output_img_repository + output_name + '_ang', ang)
-    np.savez_compressed(output_img_repository + output_name + '_scaler', scaler)
+    np.save(output_img_repository + output_name + '_scaler.npy', scaler)
 
 
 if __name__ == '__main__':

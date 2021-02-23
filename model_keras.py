@@ -68,9 +68,10 @@ if __name__ == '__main__':
     ang_l = np.load('/content/drive/MyDrive/LOL/LOLDataset/our485/low_ang.npz')['arr_0']
     pic = np.max(np.load('/content/drive/MyDrive/LOL/LOLDataset/our485/high.npz')['arr_0'], axis=3)
     # min, max-min
-    scaler = np.load('/content/drive/MyDrive/LOL/LOLDataset/our485/low_scaler.npy')['arr_0']
+    scaler = np.load('/content/drive/MyDrive/LOL/LOLDataset/our485/low_scaler.npy')
 
-    model.compile(optimizer='adam', loss='mse')
+    model.compile(optimizer=keras.optimizers.Adam(lr=0.001, decay=1e-4, epsilon=1e-7),
+                           loss=keras.losses.MeanSquaredError(), metrics=['mse'])
     reduceLR = [LearningRateScheduler(exponential_decay_with_warmup)]
     model.fit(x=mag_l, y=mag_h, epochs=100, batch_size=16, validation_split=0.02,
                    callbacks=reduceLR, shuffle=True, workers=4, use_multiprocessing=True)
