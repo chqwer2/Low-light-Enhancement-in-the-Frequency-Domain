@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import os
 from datetime import datetime
 from functools import wraps
-
+import skimage.io as io
 
 def time_log(func):
     @wraps(func)
@@ -17,11 +17,11 @@ def time_log(func):
     return wrapper
 
 def img_normalization(array):
-    array = (array - np.min(array)) / (np.max(array) - np.min(array))
-    return array
+    return (array - np.min(array)) / (np.max(array) - np.min(array))
 
 def fft_np(illumination):
-    fft_y = np.fft.fft2(illumination)  # a+bj
+    # print("shape:", illumination.shape[-2], illumination.shape[-1])  # (4, 400, 600, 3)
+    fft_y = np.fft.fft2(illumination, axes=(-2, -1))  # a+bj
     fft_y = np.fft.fftshift(fft_y)  # cmap='gray'
     mag = np.log(np.abs(fft_y)+1)
     ang = np.angle(fft_y)
@@ -88,4 +88,21 @@ def save_images(filepath, result_1, result_2 = None):
     im.save(filepath, 'png')
 
 
+if __name__ == '__main__':
+    # fft_np test
+    Img_low = './Data/*.png'
+    coll = io.ImageCollection(Img_low)
+    coll = np.max(np.array(coll), axis=3)
+    print(coll.shape)  # (1, 400, 600, 3)
+    mag, ang = fft_np(coll)  #  N, 400, 600
 
+    scaler = [np.min(mag), np.max(mag) - np.min(mag), np.min(ang), np.max(ang) - np.min(ang)]
+    mag = img_normalization(mag)
+    ang = img_normalization(ang)
+    mag = mag * scaler[1] + scaler[0]
+    ang = ang * scaler[3] + scaler[2]
+
+    ifft = ifft_np(mag, ang)
+    i = 3
+    plt.imshow(np.concatenate([ifft[i], coll[i]],1))
+    plt.show()
