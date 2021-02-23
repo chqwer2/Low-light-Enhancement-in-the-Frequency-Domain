@@ -29,10 +29,8 @@ def compress_img_fft(input_img, output_img_repository, output_name):
     print("fft transform")
     mag, ang = fft_np(coll)
     print("finish transform")
-    print(mag.shape)
 
     scaler = [np.min(mag), np.max(mag) - np.min(mag), np.min(ang), np.max(ang) - np.min(ang)]  # min, max-min
-    print(scaler)
 
     # Normalization Standardize
     mag = img_normalization(mag)#.astype(np.float16)
@@ -45,15 +43,25 @@ def compress_img_fft(input_img, output_img_repository, output_name):
 
 if __name__ == '__main__':
     print("==begin process")
-    Img_high = '/content/drive/MyDrive/Data/LOL/LOLDataset/eval15/high/*.png'
-    Img_low = '/content/drive/MyDrive/Data/LOL/LOLDataset/eval15/low/*.png'
+    # Img_high = '/content/drive/MyDrive/Data/LOL/LOLDataset/eval15/high/*.png'
+    # Img_low = '/content/drive/Myhigh/Drive/Data/LOL/LOLDataset/eval15/low/*.png'
+    Img_high = './Data/high/*.png'
+    Img_low = './Data/low/*.png'
 
     Img_high = np.array(io.ImageCollection(Img_high))
     Img_low = np.array(io.ImageCollection(Img_low))
+    print("Shape:", Img_high.shape, Img_low.shape)
     # high_compress
-    compress_img(Img_high, '/content/drive/MyDrive/LOL/LOLDataset/our485/', 'high')
-    compress_img_fft(Img_high, '/content/drive/MyDrive/LOL/LOLDataset/our485/', 'high')
+    # compress_img(Img_high, '/content/drive/MyDrive/LOL/LOLDataset/our485/', 'high')
+    # compress_img_fft(Img_high, '/content/drive/MyDrive/LOL/LOLDataset/our485/', 'high')
     # low_compress
-    compress_img(Img_low, '/content/drive/MyDrive/LOL/LOLDataset/our485/', 'low')
-    compress_img_fft(Img_low, '/content/drive/MyDrive/LOL/LOLDataset/our485/', 'low')
+    # compress_img(Img_low, '/content/drive/MyDrive/LOL/LOLDataset/our485/', 'low')
+    # compress_img_fft(Img_low, '/content/drive/MyDrive/LOL/LOLDataset/our485/', 'low')
+
+    # high_compress
+    compress_img(Img_high, './Data/high/', 'high')
+    compress_img_fft(Img_high, './Data/high/', 'high')
+    # low_compress
+    compress_img(Img_low, './Data/low/', 'low')
+    compress_img_fft(Img_low, './Data/low/', 'low')
 
