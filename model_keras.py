@@ -73,7 +73,7 @@ def keras_RelightNet(channel=64, kernel_size=3):  # u-net
                                                                 (tf.shape(deconv3)[1], tf.shape(deconv3)[2]))
     deconv2_resize = tf.compat.v1.image.resize_nearest_neighbor(deconv2,
                                                                 (tf.shape(deconv3)[1], tf.shape(deconv3)[2]))
-    feature_gather = concat([deconv1_resize, deconv2_resize, deconv3])
+    feature_gather = concat([deconv1_resize, deconv2_resize, deconv3, conv0]) # conv0
     feature_fusion = layers.Conv2D(channel, 1, padding='same', activation=tf.nn.relu)(feature_gather, )
     output_mag = layers.Conv2D(1, 1, padding='same', activation=tf.nn.relu)(feature_fusion, )
 
