@@ -14,7 +14,7 @@ def concat(layers):
 
 def exponential_decay_with_warmup(global_step, ):
     warmup_step = 10
-    learning_rate_base = 0.1
+    learning_rate_base = 0.01  #0.1
     learning_rate_step = 1
     learning_rate_decay = 0.8  # 0.96 for 200, 0.8 for 50
     staircase = False
@@ -27,6 +27,10 @@ def exponential_decay_with_warmup(global_step, ):
         learning_rate = tf.cond(global_step <= warmup_step,
                                 lambda: linear_increase.numpy(),
                                 lambda: exponential_decay.numpy())
+
+        learning_rate = tf.cond(learning_rate <= tf.constant(0.001),
+                                lambda: tf.constant(0.001),
+                                lambda: learning_rate)
         return learning_rate
 
 
@@ -51,11 +55,19 @@ def keras_RelightNet(channel=64, kernel_size=3):  # u-net
     conv3 = layers.ReLU()(conv3)
 
     up1 = tf.compat.v1.image.resize_nearest_neighbor(conv3, (tf.shape(conv2)[1], tf.shape(conv2)[2]))
-    deconv1 = layers.Conv2D(channel, kernel_size, padding='same', activation=tf.nn.relu)(up1, ) + conv2
+    deconv1 = layers.Conv2D(channel, kernel_size, padding='same')(up1, )
+    deconv1 = layers.BatchNormalization(momentum=0.8, trainable=True)(deconv1)
+    deconv1 = layers.ReLU()(deconv1)+ conv2
+
     up2 = tf.compat.v1.image.resize_nearest_neighbor(deconv1, (tf.shape(conv1)[1], tf.shape(conv1)[2]))
-    deconv2 = layers.Conv2D(channel, kernel_size, padding='same', activation=tf.nn.relu)(up2, ) + conv1
+    deconv2 = layers.Conv2D(channel, kernel_size, padding='same')(up2, )
+    deconv2 = layers.BatchNormalization(momentum=0.8, trainable=True)(deconv2)
+    deconv2 = layers.ReLU()(deconv2) + conv1
+
     up3 = tf.compat.v1.image.resize_nearest_neighbor(deconv2, (tf.shape(conv0)[1], tf.shape(conv0)[2]))
-    deconv3 = layers.Conv2D(channel, kernel_size, padding='same', activation=tf.nn.relu)(up3, ) + conv0
+    deconv3 = layers.Conv2D(channel, kernel_size, padding='same')(up3, )
+    deconv3 = layers.BatchNormalization(momentum=0.8, trainable=True)(deconv3)
+    deconv3 = layers.ReLU()(deconv3) + conv0
 
     deconv1_resize = tf.compat.v1.image.resize_nearest_neighbor(deconv1,
                                                                 (tf.shape(deconv3)[1], tf.shape(deconv3)[2]))
@@ -104,15 +116,15 @@ def img_train():
     pic_h = np.max(np.load('./Data/high/high.npz')['arr_0'], axis=3)
     pic_l = np.max(np.load('./Data/low/low.npz')['arr_0'], axis=3)
 
-    model.compile(optimizer=keras.optimizers.Adam(lr=0.0001, decay=1e-4, epsilon=1e-7),
+    model.compile(optimizer=keras.optimizers.Adam(lr=0.0002, decay=1e-4, epsilon=1e-7),
                   loss=keras.losses.MeanSquaredError(), metrics=['mse'])
-    # reduceLR = [LearningRateScheduler(exponential_decay_with_warmup)]
-    model.fit(x=pic_l, y=pic_h, epochs=100, batch_size=16, validation_split=0.02,  # callbacks=reduceLR,
+    reduceLR = [LearningRateScheduler(exponential_decay_with_warmup)]
+    model.fit(x=pic_l, y=pic_h, epochs=100, batch_size=16, validation_split=0.02,   callbacks=reduceLR,
               shuffle=True, workers=4, use_multiprocessing=True)
 
     pic_out = np.squeeze(model.predict(pic_l))
 
-    return pic*255, pic_out*255
+    return pic_h*255, pic_out*255
 
 if __name__ == '__main__':
     pic, pic_recover = img_train()  #-e03,  +e02
@@ -122,5 +134,5 @@ if __name__ == '__main__':
         print(out)
         plt.imshow(out)
         # plt.imsave('/content/drive/MyDrive/How_to_see_in_the_Dark/output/img_{}.jpg'.format(i), out)
-        plt.imsave('output/img_{}.jpg'.format(i), pic_recover[i])
-        plt.imsave('output/pair_{}.jpg'.format(i), out)
+        plt.imsave('output/img_{}.jpg'.format(i), pic_recover[i], cmap='gray')
+        plt.imsave('output/target_{}.jpg'.format(i), pic[i], cmap='gray')
