@@ -9,7 +9,7 @@ import numpy as np
 
 
 def concat(layers):
-    return tf.concat(layers, axis=3)
+    return tf.concat(layers, axis=-1)
 
 
 def exponential_decay_with_warmup(global_step, ):
@@ -73,9 +73,11 @@ def keras_RelightNet(channel=64, kernel_size=3):  # u-net
                                                                 (tf.shape(deconv3)[1], tf.shape(deconv3)[2]))
     deconv2_resize = tf.compat.v1.image.resize_nearest_neighbor(deconv2,
                                                                 (tf.shape(deconv3)[1], tf.shape(deconv3)[2]))
+
     feature_gather = concat([deconv1_resize, deconv2_resize, deconv3, conv0]) # conv0
-    feature_fusion = layers.Conv2D(channel, 1, padding='same', activation=tf.nn.relu)(feature_gather, )
-    output_mag = layers.Conv2D(1, 1, padding='same', activation=tf.nn.relu)(feature_fusion, )
+    feature_fusion = layers.Conv2D(96, 1, padding='same', activation=tf.nn.relu)(feature_gather, ) #
+
+    output_mag = layers.Conv2D(1, 1, padding='same', activation='sigmoid')(feature_fusion, ) + input  # input, remove relu
 
     model = Model(input, output_mag)
     return model
@@ -93,19 +95,21 @@ def fft_train():
     scaler_l = np.load('./Data/low/low_scaler.npy')
     scaler_h = np.load('./Data/high/high_scaler.npy')
 
-    model.compile(optimizer=keras.optimizers.Adam(lr=0.0001, decay=1e-4, epsilon=1e-7),
+    model.compile(optimizer=keras.optimizers.Adam(lr=0.00025, decay=1e-4, epsilon=1e-7),  #0.0002
                   loss=keras.losses.MeanSquaredError(), metrics=['mse'])
     # reduceLR = [LearningRateScheduler(exponential_decay_with_warmup)]
-    model.fit(x=mag_l, y=mag_h, epochs=100, batch_size=16, validation_split=0.02,  # callbacks=reduceLR,
+    print("train loss:", tf.reduce_mean(tf.pow(mag_l - mag_h, 2)))   # mse = 0.00315
+    model.fit(x=mag_l, y=mag_h, epochs=50, batch_size=16, #validation_split=0.02,  # callbacks=reduceLR,
               shuffle=True, workers=4, use_multiprocessing=True)
 
     mag = np.squeeze(model.predict(mag_l))
+
     print(scaler_l) # not so much difference
     print(scaler_h)
     print(mag_l[0, 0, 0:3])
     print(mag[0, 0, 0:3]) # 0.018
     print(mag_h[0, 0, 0:3]) # 0.32
-    pic_recover = ifft_np(mag[:10] * scaler_l[1] + scaler_l[0], ang_l[:10] * scaler_l[3] + scaler_l[2])
+    pic_recover = ifft_np(mag[:10] * scaler_h[1] + scaler_h[0], ang_h[:10] * scaler_h[3] + scaler_h[2])
     pic = ifft_np(mag_h[:10] * scaler_h[1] + scaler_h[0], ang_h[:10] * scaler_h[3] + scaler_h[2])
     return pic, pic_recover
 
@@ -127,7 +131,8 @@ def img_train():
     return pic_h*255, pic_out*255
 
 if __name__ == '__main__':
-    pic, pic_recover = img_train()  #-e03,  +e02
+    # pic, pic_recover = img_train()  #-e03,  +e02
+    pic, pic_recover = fft_train()
     for i in range(4):
         print(pic_recover[i].shape, pic[i].shape)
         out = np.concatenate([pic_recover[i], pic[i]], 1)
