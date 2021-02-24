@@ -15,7 +15,7 @@ def compress_img(input_img, output_img_repository, output_name):
     # show pic
     # io.imshow(coll[10])
     # io.show()
-    coll = np.array(coll).astype(np.float16) / 255  # Normalize
+    coll = coll / 255  # Normalize
     print(coll.shape)
     np.savez_compressed(output_img_repository + output_name + '.npz', coll)
 
@@ -51,6 +51,8 @@ if __name__ == '__main__':
     Img_high = np.array(io.ImageCollection(Img_high))
     Img_low = np.array(io.ImageCollection(Img_low))
     print("Shape:", Img_high.shape, Img_low.shape)
+    print("High img：", Img_high[0][0][0:5])
+    print("Low img：", Img_low[0][0][0:5])
     # high_compress
     # compress_img(Img_high, '/content/drive/MyDrive/LOL/LOLDataset/our485/', 'high')
     # compress_img_fft(Img_high, '/content/drive/MyDrive/LOL/LOLDataset/our485/', 'high')
