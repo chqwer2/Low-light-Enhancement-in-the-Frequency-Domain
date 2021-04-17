@@ -1,7 +1,7 @@
 from __future__ import print_function
 import argparse
-from .train import train
-from .test import test
+from train import train
+from test import test
 from utils import *
 
 parser = argparse.ArgumentParser(description='')

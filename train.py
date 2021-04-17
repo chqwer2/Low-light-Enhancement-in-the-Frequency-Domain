@@ -12,12 +12,12 @@ from tensorflow.python.ops import math_ops
 from tensorflow.python.framework import ops
 from tensorflow.python.keras import backend as K
 
-from .network.R2_MWCNN import *
-from .utils.utils import load_images, save_images
-from .utils.activation import act_type
-from .utils.metric import SSIM_metric, sk_psnr, compute_ssim
-from .network.model import Model
-from .losses.losses import loss_function
+from network.R2_MWCNN import *
+from utils.utils import load_images, save_images
+from utils.activation import act_type
+from utils.metric import SSIM_metric, sk_psnr, compute_ssim
+from network.model import Model
+from losses.losses import loss_function
 
 # He initializer
 glorot = tf.keras.initializers.GlorotUniform(seed=None)
