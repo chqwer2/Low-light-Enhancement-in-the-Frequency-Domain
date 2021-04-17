@@ -16,7 +16,7 @@ from network.R2_MWCNN import *
 from utils.utils import load_images, save_images
 from utils.activation import act_type
 from utils.metric import SSIM_metric, sk_psnr, compute_ssim
-from network.model import Model
+from network.model import R2MWCNN
 from losses.losses import loss_function
 
 # He initializer
@@ -34,7 +34,8 @@ class run(object):
         self.act = args.act
         self.momentum = momentum
         self.mse_loss = tf.keras.losses.MeanSquaredError()
-        self.test_low_data, self.test_high_data, self.test_low_data_name, self.test_high_data_name = load_images(args.test)
+        self.test_low_data, self.test_high_data, self.test_low_data_name, self.test_high_data_name\
+              = load_images(args.test_dir)
         self.val_data_x, self.val_data_y = self.test_low_data[0:10], self.test_high_data[0:10]
 
         if not os.path.exists(self.args.save_dir):
@@ -55,10 +56,10 @@ class run(object):
 
     def TrainModel(self):
 
-        self.model = Model()
+        self.model = R2MWCNN()
         self.model.compile(optimizer=keras.optimizers.Adam(lr=self.Learning_rate,  epsilon=1e-7), # decay=1e-5,
                            loss=loss_function, metrics=['mse' , SSIM_metric()])  #
-        self.X, self.y, _, _ = load_images(self.args.train)
+        self.X, self.y, _, _ = load_images(self.args.train_dir)
 
         # self.X = np.load("../data/LOLv2_low_compress.npz")['arr_0']
         # self.y = np.load("../data/LOLv2_high_compress.npz")['arr_0']
@@ -156,7 +157,7 @@ class run(object):
 
 ##########################################################################################################################
 
-def train_(args):
+def train(args):
     fun = run(args)
     if args.phase == 'train':
         fun.TrainModel()

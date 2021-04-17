@@ -4,7 +4,7 @@ from tensorflow.keras.layers import Conv2D, BatchNormalization, LeakyReLU, ReLU,
 from tensorflow.keras.models import Sequential, Model
 
 
-def Model(use_bias=False):
+def R2MWCNN(use_bias=False):
     input_img = tf.keras.Input(shape=(None, None, 3))  # 150*150*1  Input placeholder
 
     # input_max = tf.reduce_max(input_img, axis=3, keepdims=True)  # maximum
