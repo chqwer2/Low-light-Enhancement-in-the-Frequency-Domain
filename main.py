@@ -22,13 +22,11 @@ args = parser.parse_args()
 
 
 def main(_):
-    if args.phase == 'train':
-        train(args)
-    elif args.phase == 'test':
-        test(args)
-    else:
+    if args.phase != 'train' or args.phase != 'test':
         print('[!] Please Input Phase == train or test')
         exit(0)
+    else:
+        train(args)
 
 
 if __name__ == '__main__':

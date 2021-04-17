@@ -43,4 +43,4 @@ def load_images(dir):
     print("Finish Loading...")
     print("Image Shape:", high_data.shape)
 
-    return low_data, high_data
+    return low_data, high_data, low_data_name, high_data_name
