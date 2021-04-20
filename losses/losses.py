@@ -2,7 +2,7 @@ import tensorflow as tf
 from tensorflow.python.ops import math_ops
 from tensorflow.python.framework import ops
 from tensorflow.python.keras import backend as K
-from content_loss import VGG_loss
+from .content_loss import VGG_loss
 
 def SmoothL1(true, pred, delta=0.05):
     y_pred = ops.convert_to_tensor(pred)
