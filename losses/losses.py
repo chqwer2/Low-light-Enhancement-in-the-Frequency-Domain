@@ -51,13 +51,20 @@ def sobel_edge_loss(true, pred):
     edge_loss2 = SmoothL1(pred[..., 1], true[..., 1])
     return edge_loss1 + edge_loss2
 
+def channel_loss(true, pred):
+    pred = tf.reduce_mean(pred, axis=[1, 2])
+    true = tf.reduce_mean(true, axis=[1, 2])
+
+    return tf.reduce_mean(tf.abs(pred - true))
+
 vgg = VGG_loss()
+
 def loss_function(true, pred):
     mse = SmoothL1(pred, true)     # SmoothL1
     ssim = ssim_loss(pred, true)
     region = light_region_loss(true, pred)
     VGG = vgg(pred, true)
-
+    channel = channel_loss(true, pred)
     edge_loss = sobel_edge_loss(true, pred)
 
-    return 1.5 * mse + 1.0 * ssim + 1.0 * region + 0.1 * VGG + 0.2 * edge_loss
+    return 1.5 * mse + 1.0 * ssim + 1.0 * region + 0.1 * VGG + 0.2 * edge_loss + 0.1 * channel

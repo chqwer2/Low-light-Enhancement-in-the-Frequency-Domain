@@ -82,9 +82,9 @@ def sk_ssim(im1, im2):
     return ssim_dark
 
 
-class SSIM_metric(tf.keras.metrics.Metric):
+class PSNR_metric(tf.keras.metrics.Metric):  # keras.metrics.Mean, Metric
     def __init__(self, name="PSNR", **kwargs):
-        super(SSIM_metric, self).__init__(name=name, **kwargs)
+        super(PSNR_metric, self).__init__(name=name, **kwargs)
         self.true_positives = self.add_weight(name="ctp", initializer="zeros")
         self.psnr = sk_psnr
         self.values = []
@@ -96,7 +96,7 @@ class SSIM_metric(tf.keras.metrics.Metric):
 
         psnr = 10 * tf.math.log((1.0 ** 2) / err) / tf.math.log(10.)
         # self.values.append(tf.reduce_mean(psnr))
-        self.true_positives.assign_add(tf.reduce_mean(psnr))  # assign_add
+        self.true_positives.assign(tf.reduce_mean(psnr))  # assign_add
 
     def result(self):
         return self.true_positives

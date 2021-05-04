@@ -15,7 +15,7 @@ from tensorflow.python.keras import backend as K
 from network.R2_MWCNN import *
 from utils.utils import load_images, save_images
 from utils.activation import act_type
-from utils.metric import SSIM_metric, sk_psnr, compute_ssim
+from utils.metric import PSNR_metric, sk_psnr, compute_ssim
 from network.model import R2MWCNN
 from losses.losses import loss_function
 
@@ -45,11 +45,16 @@ class run(object):
 
 
     def callbacks(self):
+        logs = os.path.join(self.out_dir, "log_board")
+        tboard_callback = tf.keras.callbacks.TensorBoard(log_dir=logs,histogram_freq=1,
+                                                         update_freq=1000,write_graph=True,
+                                                         profile_batch=2)
+
         training_log = os.path.join(self.out_dir, 'training.csv')
         csv_logger = tf.keras.callbacks.CSVLogger(training_log)
         callbacks = [tf.keras.callbacks.ReduceLROnPlateau(monitor='mse', factor=0.2, patience=10, verbose=1,
                                                           min_delta=1e-4, cooldown=5, min_lr=1e-8),
-                     # LambdaCallback(on_epoch_begin=None, on_epoch_end=self.lambda_end),
+                     # LambdaCallback(on_epoch_begin=None, on_epoch_end=lambda_end),
                      csv_logger]
         return callbacks
 
@@ -58,7 +63,7 @@ class run(object):
 
         self.model = R2MWCNN()
         self.model.compile(optimizer=keras.optimizers.Adam(lr=self.Learning_rate,  epsilon=1e-7), # decay=1e-5,
-                           loss=loss_function, metrics=['mse' , SSIM_metric()])  #
+                           loss=loss_function, metrics=['mse', SSIM_metric()])  #
         self.X, self.y, _, _ = load_images(self.args.train_dir)
 
         # self.X = np.load("../data/LOLv2_low_compress.npz")['arr_0']
