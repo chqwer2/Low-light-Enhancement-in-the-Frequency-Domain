@@ -175,7 +175,7 @@ class DWT_downsampling(tf.keras.layers.Layer):
         x3 = x[:, 0::2, 1::2, :]  # x(2i−1, 2j)
         x4 = x[:, 1::2, 1::2, :]  # x(2i, 2j)
 
-        x_LL = ( x1 + x2 + x3 + x4 ) /4
+        x_LL = ( x1 + x2 + x3 + x4 ) / 4
         x_LH = -x1 - x3 + x2 + x4
         x_HL = -x1 + x3 - x2 + x4
         x_HH = x1 - x3 - x2 + x4
@@ -191,12 +191,12 @@ class IWT_upsampling(tf.keras.layers.Layer):
         The following calculations for IWT are inspired from,
         https://github.com/AureliePeng/Keras-WaveletTransform/blob/master/models/DWT.py
         """
-        x_LL = x[:, :, :, 0:x.shape[3] // 4]
+        x_LL = x[:, :, :, 0:x.shape[3] //4 ] * 4
         x_LH = x[:, :, :, x.shape[3] // 4:x.shape[3] // 4 * 2]
         x_HL = x[:, :, :, x.shape[3] // 4 * 2:x.shape[3] // 4 * 3]
         x_HH = x[:, :, :, x.shape[3] // 4 * 3:]
 
-        x1 = (x_LL - x_LH - x_HL + x_HH) #/ 4
+        x1 = (x_LL - x_LH - x_HL + x_HH) / 4
         x2 = (x_LL - x_LH + x_HL - x_HH) / 4
         x3 = (x_LL + x_LH - x_HL - x_HH) / 4
         x4 = (x_LL + x_LH + x_HL + x_HH) / 4

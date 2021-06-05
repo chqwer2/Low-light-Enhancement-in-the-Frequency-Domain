@@ -63,7 +63,7 @@ class run(object):
 
         self.model = R2MWCNN()
         self.model.compile(optimizer=keras.optimizers.Adam(lr=self.Learning_rate,  epsilon=1e-7), # decay=1e-5,
-                           loss=loss_function, metrics=['mse', SSIM_metric()])  #
+                           loss=loss_function, metrics=['mse', PSNR_metric()])  #
         self.X, self.y, _, _ = load_images(self.args.train_dir)
 
         # self.X = np.load("../data/LOLv2_low_compress.npz")['arr_0']
@@ -105,7 +105,7 @@ class run(object):
                                                 'cnn_mutau_model_saved.h5'), compile=False,
                                                 custom_objects={'Rec_Conv_block':Rec_Conv_block,
                                                                 'DWT_downsampling':DWT_downsampling,
-                                                                'Nor_Conv_block': Nor_Conv_block,
+                                                                # 'Nor_Conv_block': Nor_Conv_block,
                                                                 'IWT_upsampling':IWT_upsampling})
 
         PSNR, SSIM = [], []
@@ -127,9 +127,9 @@ class run(object):
 
     def TestModel_no_pair(self):
         self.model =  keras.models.load_model(os.path.join('Newron_output',
-                                                           'cnn_mutau_model_saved_loss_22.83027167823021.h5'), compile=False,
+                                                           'cnn_mutau_model_saved_22.83.h5'), compile=False,
                                             custom_objects={'Rec_Conv_block':Rec_Conv_block,
-                                                            'Nor_Conv_block': Nor_Conv_block,
+                                                            # 'Nor_Conv_block': Nor_Conv_block,
                                                             'DWT_downsampling':DWT_downsampling,
                                                             'IWT_upsampling':IWT_upsampling})
 
