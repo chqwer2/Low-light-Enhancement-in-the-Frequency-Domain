@@ -90,44 +90,51 @@ def sk_ssim(im1, im2):
 
 
 if __name__ == "__main__":
+    l = ['CVC', 'DHECI', 'DONG', 'EFF', 'LDR', 'NPE', 'SRIE', 'WAHE']
+    for item in l:
+        True_files = glob(r"C:\Users\calvchen\Downloads\LowLightMetrics\LOL-real\Our_normal_test/*.*")
+        Pred_files = glob(r"C:\Users\calvchen\Downloads\LowLightMetrics\LOL-real\{}/*.*".format(item))
+        # Pred_files = glob(r"C:\Users\calvchen\Downloads\test_results\*_enhn.*")
+        print(len(Pred_files))
+        True_files.sort()
+        Pred_files.sort()
+        PSNR = []
+        SSIM = []
+        sk_SSIM = []
+        im1_array = []
+        im2_array = []
+        for i in range(len(Pred_files)):
+            im1 = np.array(Image.open(True_files[i]), np.float16) / 255
+            im2 = np.array(Image.open(Pred_files[i]), np.float16) / 255
+            # print("Max value:", np.max(im2))
+            im1_array.append(im1)
+            im2_array.append(im2)
 
-    # Pred_files = glob("/content/CVPR-2020-Semi-Low-Light/DRBL-stage1/experiment/Full_results/results/*HR_Pred.png")
-    PSNR = []
-    SSIM = []
-    sk_SSIM = []
-    im1_array = []
-    im2_array = []
+            PSNR.append(sk_psnr(np.array(im1), np.array(im2)))
+            SSIM.append(compute_ssim(np.expand_dims(np.array(im1), axis=0), np.expand_dims(np.array(im2), axis=0)))
+            sk_SSIM.append(sk_ssim(np.array(im1), np.array(im2)))
 
-    im1 = np.array(Image.open('../images/compare/normal.png'), np.float16) / 255
-    im2 = np.array(Image.open('../images/compare/RetinexNet.png'), np.float16) / 255
-    im1_array.append(im1)
-    im2_array.append(im2)
+            # print("sk SSIM score:", sk_SSIM[-1])
+            # print("SSIM score:", SSIM[-1])
+            # print(True_files[i].split('\\')[-1], Pred_files[i].split('\\')[-1], "psnr:", PSNR[-1], "ssim:", SSIM[-1])
+            # print("PSNR score:", PSNR(np.expand_dims(np.array(im1), axis=0), np.expand_dims(np.array(im2), axis=0)))
 
-    PSNR.append(sk_psnr(np.array(im1), np.array(im2)))
-    SSIM.append(compute_ssim(np.expand_dims(np.array(im1), axis=0), np.expand_dims(np.array(im2), axis=0)))
-    sk_SSIM.append(sk_ssim(np.array(im1), np.array(im2)))
 
-    # print("sk SSIM score:", sk_SSIM[-1])
-    # print("SSIM score:", SSIM[-1])
-    print("psnr:", PSNR[-1], "ssim:", SSIM[-1])
-    # print("PSNR score:", PSNR(np.expand_dims(np.array(im1), axis=0), np.expand_dims(np.array(im2), axis=0)))
-
-    print("Mean PSNR :", np.mean(PSNR))
-    print("Mean SSIM :", np.mean(SSIM))
-    print("Mean sk SSIM :", np.mean(sk_SSIM))
-
-    from importlib import import_module
-    fid = import_module('utils.FID').fid
-    eval_fid = fid()
-    FID = eval_fid.eval(np.squeeze(im1_array), np.squeeze(im2_array))
-    print("Mean FID:", np.mean(FID), FID)
-    import tensorflow as tf
-    # lpips
-    # from LPIPS import lpips
-    #
-    # sess = tf.compat.v1.Session()
-    # eval_lpips = lpips()
-    # LPIPS = eval_lpips.eval(np.array(np.squeeze(im1_array), dtype=np.float32), np.array(im2_array, dtype=np.float32))
-    # # a series of output
-    # print("Mean LPIPS:", sess.run(tf.reduce_mean(LPIPS)))
+        from importlib import import_module
+        fid = import_module('utils.FID').fid
+        eval_fid = fid()
+        FID = eval_fid.eval(np.squeeze(im1_array), np.squeeze(im2_array))
+        print(item)
+        print("Mean PSNR :", np.mean(PSNR))
+        print("Mean SSIM :", np.mean(SSIM))
+        print("Mean FID:", np.mean(FID), FID)
+        import tensorflow as tf
+        # lpips
+        # from LPIPS import lpips
+        #
+        # sess = tf.compat.v1.Session()
+        # eval_lpips = lpips()
+        # LPIPS = eval_lpips.eval(np.array(np.squeeze(im1_array), dtype=np.float32), np.array(im2_array, dtype=np.float32))
+        # # a series of output
+        # print("Mean LPIPS:", sess.run(tf.reduce_mean(LPIPS)))
 

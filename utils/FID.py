@@ -46,9 +46,9 @@ def create_inception_graph(pth):
 #   https://github.com/openai/improved-gan/blob/master/inception_score/model.py
 def _get_inception_layer(sess):
     """Prepares inception net for batched usage and returns pool_3 layer. """
-    layername = 'pool_3:0'
+    layername = 'pool_3:0'   # FID_Inception_Net/
 
-    # print all the name within the graph
+    # print all the names within the graph
     # graph = tf.compat.v1.get_default_graph()
     # [print(n.name) for n in tf.compat.v1.get_default_graph().as_graph_def().node]
 
@@ -73,7 +73,7 @@ def _get_inception_layer(sess):
 # -------------------------------------------------------------------------------
 
 
-def get_activations(images, sess, batch_size=1, verbose=False):
+def get_activations(images, sess, batch_size=50, verbose=False):
     """Calculates the activations of the pool_3 layer for all images.
     Params:
     -- images      : Numpy array of dimension (n_images, hi, wi, 3). The values
@@ -297,23 +297,40 @@ def check_or_download_inception(inception_path):
 
 
 def _handle_path(path, sess, low_profile=False):
-    if path.endswith('.npz'):
-        f = np.load(path)
-        m, s = f['mu'][:], f['sigma'][:]
-        f.close()
-    else:
+    # if path.endswith('.npz'):
+    #     f = np.load(path)
+    #     m, s = f['mu'][:], f['sigma'][:]
+    #     f.close()
+    # else:
         # Good trial
         # path = pathlib.Path(path)
-        files = [path] #list(path.glob('*.jpg')) + list(path.glob('*.png'))
+    # files = [path] #list(path.glob('*.jpg')) + list(path.glob('*.png'))
 
-        if low_profile:
-            m, s = calculate_activation_statistics_from_files(files, sess)
-        else:
-            x = np.array([imread(str(fn)).astype(np.float32) for fn in files])
-            print(x.shape)
-            m, s = calculate_activation_statistics(x, sess)
-            del x  # clean up memory
+    # if low_profile:
+    #     m, s = calculate_activation_statistics_from_files(files, sess)
+    # else:
+    x = path  #np.array([imread(str(fn)).astype(np.float32) for fn in files])
+    print(x.shape)
+    m, s = calculate_activation_statistics(x, sess)
+    del x  # clean up memory
     return m, s
+
+
+
+class fid():
+    def __init__(self, ):
+        self.inception_path = '/home/calvchen/pre_train/.fid/'
+        self.inception_path = check_or_download_inception(self.inception_path)
+        create_inception_graph(str(self.inception_path))
+
+    def eval(self, im1, im2, low_profile=False):
+        ''' Calculates the FID of two images. '''
+        with tf.compat.v1.Session() as sess:
+            sess.run(tf.compat.v1.global_variables_initializer())
+            m1, s1 = _handle_path(im1, sess, low_profile=low_profile)
+            m2, s2 = _handle_path(im2, sess, low_profile=low_profile)
+            fid_value = calculate_frechet_distance(m1, s1, m2, s2)
+            return fid_value
 
 
 def calculate_fid_given_paths(paths, inception_path, low_profile=False):
