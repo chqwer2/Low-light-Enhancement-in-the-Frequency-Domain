@@ -1,8 +1,5 @@
-# This script is the demo for Newron Model contest, source code from ATD kara
-# Author: Hao, 2020/12/23
-# Modified: Calvin. 2020/12/24
+# Author: Calvin. 2020/12/24
 
-# Not included in ML LH Project
 import itertools
 import sys, os
 import numpy as np

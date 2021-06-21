@@ -13,9 +13,10 @@ from PIL import Image
 
 
 def TestModel(test_dir):
-    low_data, high_data, low_data_name, high_data_name = load_images('/content/drive/MyDrive/Data/LOL/test')
+    low_data, high_data, low_data_name, high_data_name = load_images(test_dir)
 
-    model = keras.models.load_model('model/model_saved.h5', compile=False,
+
+    model = keras.models.load_model('model/best_model_saved.h5', compile=False,
                                     custom_objects={'Rec_Conv_block': Rec_Conv_block,
                                                     'DWT_downsampling': DWT_downsampling,
                                                     'IWT_upsampling': IWT_upsampling})
@@ -25,7 +26,7 @@ def TestModel(test_dir):
     for i in range(len(low_data)):
         y_predict = model.predict(np.expand_dims(low_data[i], 0))
         PSNR.append(sk_psnr(y_predict[0], high_data[i]))
-        SSIM.append(compute_ssim(y_predict, tf.expand_dims(high_data[i], 0)))
+        SSIM.append(compute_ssim(y_predict, np.expand_dims(high_data[i], 0)))
         print("High File: {}".format(high_data_name[i]))
         print("File {} , SSIM {}, PSNR {}\n".format(low_data_name[i], SSIM[-1], PSNR[-1]))
 
@@ -42,4 +43,4 @@ def TestModel(test_dir):
     print("Mean SSIM :", np.mean(SSIM))
 
 if __name__ == '__main__':
-    TestModel(test_dir=0)
+    TestModel('/content/drive/MyDrive/Data/LOL/test')

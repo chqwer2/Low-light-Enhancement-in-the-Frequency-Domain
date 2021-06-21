@@ -30,6 +30,8 @@ def load_images(dir):
     print("Loading data from {}...".format(dir))
     low_data_name = glob(os.path.join(dir, 'low/*.*'))
     high_data_name = glob(os.path.join(dir, 'high/*.*'))
+    low_data_name.sort()
+    high_data_name.sort()
     high_data = []
     low_data = []
 
