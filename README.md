@@ -11,7 +11,7 @@
 </p>
 
 
-<img src="./assets/LLE.jpg" align="center" width="100%">
+<img src="./assets/LLE.jpg" align="center" width="70%">
 
 [arXiv](https://arxiv.org/abs/2307.08699)
 
