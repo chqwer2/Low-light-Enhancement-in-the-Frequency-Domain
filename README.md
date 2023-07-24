@@ -11,8 +11,6 @@
 </p>
 
 
-<img src="./assets/LLE.jpg" align="center" width="70%">
-
 [arXiv](https://arxiv.org/abs/2307.08699)
 
 ## Abstract
@@ -42,6 +40,9 @@ conda install pytorch==1.7.1 torchvision pytorch-cuda=11.0 -c pytorch -c nvidia 
 
 </details>
 
+### Architecture
+
+<img src="./assets/LLE.jpg" align="center" width="100%">
 
 ### Training
 
