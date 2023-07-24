@@ -1,11 +1,11 @@
-# Low-Light Image Enhancement\\ in the Frequency Domain
+# Low-Light Image Enhancement in the Frequency Domain
 
 <p align="center">
   <br>
   <a href="https://chqwer2.github.io/" target="_blank">Hao Chen*</a>,&nbsp;
   Zhi Jin<sup>&#x2709;
   <br>
-  S-Lab, Sun Yat-sen University
+  School of Intelligent Systems Engineering, Sun Yat-sen University
   <br>
   <sup>&#x2709;</sup> Corresponding Author
 </p>
