@@ -11,13 +11,13 @@
 </p>
 
 
-<img src="./doc/teaser.jpg" align="center" width="100%">
+<img src="./assets/LLE.jpg" align="center" width="100%">
 
 [arXiv](https://arxiv.org/abs/2307.08699)
 
 ## Abstract
 
-Decreased visibility, intensive noise, and biased color are the common problems existing in low-light images. These visual disturbances further reduce the performance of high-level vision tasks, such as object detection, and tracking. To address this issue, some image enhancement methods have been proposed to increase the image contrast. However, most of them are implemented only in the spatial domain, which can be severely influenced by noise signals while enhancing. Hence, in this work, we propose a novel residual recurrent multi-wavelet convolutional neural network ({\bf R2-MWCNN}) learned in the frequency domain that can simultaneously increase the image contrast and reduce noise signals well. This end-to-end trainable network utilizes a multi-level discrete wavelet transform to divide input feature maps into distinct frequencies, resulting in a better denoise impact. A channel-wise loss function is proposed to correct the color distortion for more realistic results. Extensive experiments demonstrate that our proposed R2-MWCNN outperforms the state-of-the-art methods quantitively and qualitatively.  
+Decreased visibility, intensive noise, and biased color are the common problems existing in low-light images. These visual disturbances further reduce the performance of high-level vision tasks, such as object detection, and tracking. To address this issue, some image enhancement methods have been proposed to increase the image contrast. However, most of them are implemented only in the spatial domain, which can be severely influenced by noise signals while enhancing. Hence, in this work, we propose a novel residual recurrent multi-wavelet convolutional neural network R2-MWCNN learned in the frequency domain that can simultaneously increase the image contrast and reduce noise signals well. This end-to-end trainable network utilizes a multi-level discrete wavelet transform to divide input feature maps into distinct frequencies, resulting in a better denoise impact. A channel-wise loss function is proposed to correct the color distortion for more realistic results. Extensive experiments demonstrate that our proposed R2-MWCNN outperforms the state-of-the-art methods quantitively and qualitatively.  
 ## Codebase Structure
 
 ### Data Preparation
@@ -42,9 +42,6 @@ conda install pytorch==1.7.1 torchvision pytorch-cuda=11.0 -c pytorch -c nvidia 
 
 </details>
 
-### Architecture
-
-<img src=".assets/LLE.jpg" align="center" width="100%">
 
 ### Training
 
@@ -62,7 +59,7 @@ PYTHONPATH='.':$PYTHONPATH python test.py
 
 ### Results
 
-<img src=".assets/LLE_result.jpg" align="center" width="100%">
+<img src="./assets/LLE_result.jpg" align="center" width="100%">
 
 
 
