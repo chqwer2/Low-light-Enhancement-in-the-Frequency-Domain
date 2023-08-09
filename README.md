@@ -36,6 +36,7 @@ We recommend using Anaconda to set up the environment:
 
 ``` bash
 conda install pytorch==1.7.1 torchvision pytorch-cuda=11.0 -c pytorch -c nvidia -y
+pip install tenforflow==2.3.0
 ```
 
 </details>
